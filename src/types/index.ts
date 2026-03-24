@@ -1,54 +1,82 @@
-export interface Product {
+// ─── Módulo 1: Gestión Comercial ────────────────────────────────────────────
+
+export interface Articulo {
   id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  icon?: string;
-  category: string;
+  nombre: string;
+  precioUnitario: number;
+  categoria: 'helado' | 'bebida' | 'topping' | 'combo';
+  emoji: string;
 }
 
-export interface CartLine {
-  product: Product;
-  quantity: number;
-  lineDiscount: number;
+export interface LineaFactura {
+  articulo: Articulo;
+  cantidad: number;
+  descuentoLinea: number; // percentage, 0-100
+  subtotalLinea: number;  // calculated by PricingService
 }
 
-export interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  points: number;
-  tier: "bronze" | "silver" | "gold";
-  benefits: string[];
+export interface CabeceraFactura {
+  fecha: string;
+  empresa: {
+    nombre: string;
+    ruc: string;
+    direccion: string;
+    telefono: string;
+  };
+  cliente: {
+    nombre: string;
+    nit: string;
+  };
 }
 
-export type PaymentMethod = "qr" | "cash";
-
-export interface SaleDraft {
-  lines: CartLine[];
-  customer: Customer | null;
-  taxRate: number;
-  globalDiscount: number;
+export interface PieFactura {
+  totalBruto: number;
+  descuentoGeneral: number; // percentage, 0-100
+  montoDescuento: number;
+  totalNeto: number;
+  metodoPago: 'EFECTIVO' | 'QR';
 }
 
-export interface SaleReceipt {
-  saleId: string;
-  cuf: string;
-  qrPayload: string;
-  total: number;
-  issuedAt: string;
+export interface Factura {
+  numeroFactura: string;
+  fecha: string;
+  cabecera: CabeceraFactura;
+  lineas: LineaFactura[];
+  pie: PieFactura;
 }
 
-export interface SaleCompletedPayload {
-  saleId: string;
-  customerId: string | null;
-  lines: CartLine[];
-  total: number;
-  paymentMethod: PaymentMethod;
+// ─── Módulo 2: Gestión de Almacén ────────────────────────────────────────────
+
+export interface ArticuloStock {
+  idArticulo: string; // matches Articulo.id
+  nombre: string;
+  unidad: string;
+  cantidadActual: number;
+  stockMinimo: number;
+  stockMaximo: number;
 }
 
-export type StockCheckResult =
-  | { ok: true; available: number }
-  | { ok: false; available: number; reason: string };
+export type TipoMovimiento = 'ENTRADA' | 'SALIDA';
 
-export * from "./inventory";
+export interface MovimientoStock {
+  idMovimiento: string;
+  fecha: string;
+  tipoMovimiento: TipoMovimiento;
+  idArticulo: string;
+  nombreArticulo: string;
+  cantidad: number;
+  referenciaDocumento: string; // factura number or manual ref
+  descripcion: string;
+}
+
+export type NivelSemaforo = 'VERDE' | 'NARANJA' | 'ROJO';
+
+// ─── EventBus Events ─────────────────────────────────────────────────────────
+
+export interface VentaCompletadaPayload {
+  factura: Factura;
+}
+
+export interface EventMap {
+  VENTA_COMPLETADA: VentaCompletadaPayload;
+}
